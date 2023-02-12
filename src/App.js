@@ -9,31 +9,40 @@ function App() {
   const [allDice, setAllDice] = useState(
    () => GenerateRandomNumber() || []
   )
-  // const [disable, setDisable] = useState(false)
+  const [gameWon, setGameWon] = useState(false)
+
+  // We need set the gameWon state based on the the status 
+  // of allDice value and isLocked properties
+  // we are setting the state of Gamewon based on the 
+  // allDice state - we are keeping these 2 pieces of satte in sync with each other
+  // we are using one state status to set another state
+
+  useEffect(() => {
+    console.log('dice state changed')
+    setGameWon(    
+      () => function gameUp() {
+        return (allDice.every((dice, i)=> (dice.value === allDice[0].value) && dice.isLocked)) 
+    })
+
+  }, [allDice])
+
+  function newDie() {
+    return {
+      id: nanoid(),
+      value: +Math.floor((Math.random() * 6) + 1).toFixed(),
+      isLocked: false
+    }
+  }
 
   function GenerateRandomNumber() {
     let randArr = [];
-    let lent;
-    (allDice.length < 1) ? lent = 10 : lent = allDice.length;
-    for (let i = 0; i < lent.length; i++) {
-      randArr.push(
-        {
-          id: nanoid(),
-          value: +Math.floor((Math.random() * 6) + 1).toFixed(),
-          isLocked: false
-        }
-      )
+    for (let i = 0; i < 10; i++) {
+      randArr.push(newDie())
     }
-
     return randArr
   }
 
-  console.log(allDice)
-
-  // useEffect(() => {
-
-  // }, [])
-
+// changes allDice state
   const lockDie = (id) => {
     setAllDice(prev => prev.map( dice => {
         return (dice.id === id) ? {...dice, isLocked: !dice.isLocked} : dice 
@@ -41,18 +50,26 @@ function App() {
     )
   }
 
-  const handleRoll = () => {
+  // changes allDice state
+  const rollDie = () => {
     console.log('Roll dice')
-    setAllDice(GenerateRandomNumber())
+    setAllDice(prev => prev.map( dice => {
+      return (dice.isLocked !== true) 
+        ? {...dice, value: +Math.floor((Math.random() * 6) + 1).toFixed()} 
+        : dice 
+    }))
   }
-  // loop through dice
-  // if dice.isLocked is false roll dice
-  // else do not roll dice
+
+  // function winStatus() {
+  //   setGameWon(allDice => allDice.every((dice, allDice) => ((dice.value === allDice[0].value) && (dice.locked === true)) && true))
+  // }
+
 
 
   return (
     <div className="App">
       <main>
+        {<p>Game won!!!</p>}
         <h1>Tenzies</h1>
         <p className='roll'>Roll until all dice are the same. Click each die to freeze it at its current value between rolls.</p>
 
@@ -71,7 +88,7 @@ function App() {
         </main>
 
         <div className='roller'>
-          <button onClick={handleRoll}>Roll Dice</button>
+          <button onClick={rollDie}>{!gameWon ? 'Roll Dice' : 'Re-roll Dice'}</button>
         </div>
       </main>
 
