@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import {nanoid} from 'nanoid'
 import { Tenzos } from './Tenzos';
+// import confetti from 'react-confetti'
 import './App.css';
 
 function App() {
@@ -19,12 +20,18 @@ function App() {
 
   useEffect(() => {
     console.log('dice state changed')
-    setGameWon(    
-      () => function gameUp() {
-        return (allDice.every((dice, i)=> (dice.value === allDice[0].value) && dice.isLocked)) 
-    })
-
+    const allLockeed = allDice.every(dice => dice.isLocked)
+    const firstArr = allDice[0].value
+    const allEqual = allDice.every((dice) => dice.value === firstArr)
+    if (allLockeed && allEqual) {
+      setGameWon(true)
+    }
   }, [allDice])
+
+  // () => {
+  //   const {width, height} = useWindowSize()
+  //   return (gameWon && <Confetti width={300} height={300} />)
+  // }
 
   function newDie() {
     return {
@@ -44,20 +51,32 @@ function App() {
 
 // changes allDice state
   const lockDie = (id) => {
-    setAllDice(prev => prev.map( dice => {
+    if (!gameWon) {
+      setAllDice(prev => prev.map( dice => {
         return (dice.id === id) ? {...dice, isLocked: !dice.isLocked} : dice 
       })
     )
+    }
+
   }
+
+  //  {...dice, value: +Math.floor((Math.random() * 6) + 1).toFixed()} 
 
   // changes allDice state
   const rollDie = () => {
     console.log('Roll dice')
-    setAllDice(prev => prev.map( dice => {
-      return (dice.isLocked !== true) 
-        ? {...dice, value: +Math.floor((Math.random() * 6) + 1).toFixed()} 
-        : dice 
-    }))
+    if (!gameWon) {
+      setAllDice(prev => prev.map( dice => {
+        return (dice.isLocked !== true) 
+          ? newDie()
+          : dice 
+      }))
+    }else {
+      setGameWon(false)
+      setAllDice(GenerateRandomNumber())
+
+    }
+
   }
 
   // function winStatus() {
@@ -69,11 +88,12 @@ function App() {
   return (
     <div className="App">
       <main>
-        {<p>Game won!!!</p>}
+        {gameWon && <p>Game won!!!</p>}
         <h1>Tenzies</h1>
         <p className='roll'>Roll until all dice are the same. Click each die to freeze it at its current value between rolls.</p>
 
         <main className='main-tenzo'>
+          {/* {gameWon && <Confetti />} */}
 
           {allDice.map((die, i) => {
             return <Tenzos
@@ -88,7 +108,7 @@ function App() {
         </main>
 
         <div className='roller'>
-          <button onClick={rollDie}>{!gameWon ? 'Roll Dice' : 'Re-roll Dice'}</button>
+          <button onClick={rollDie}>{!gameWon ? 'Roll Dice' : 'New Game'}</button>
         </div>
       </main>
 
